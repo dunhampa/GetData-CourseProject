@@ -11,5 +11,6 @@ A copy of this data is found within this REPO to investigate any discrepancies
 The zip file should be unzipped and place in your working directory.
 That is, "UCI HAR Dataset" should be placed in working directory
 
-##Dependency
-###1)You need to install data.table package if it is not installed install.packages("data.table")
+#Dependencies
+##1)You need to install data.table package if it is not installed install.packages("data.table")
+##2)The directory of raw data "UCI HAR Dataset" must be copied into R working directory
