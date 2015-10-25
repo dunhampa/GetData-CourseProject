@@ -1,3 +1,52 @@
+##Main script or "main portion of code"
+run_analysis<-function(){
+  
+  ##loading library
+  library(data.table)
+  
+  ##Geting X Data and adding descriptive columns
+  trainDT<-GetXDataWithColHeaders("train")
+  testDT<-GetXDataWithColHeaders("test")
+  
+  ##merging X Data as rows
+  mergedtables<-rbind(trainDT, testDT)
+  
+  ##Getting Subject ID data
+  trainSubject<-GetSubjectIDData("train")
+  testSubject<-GetSubjectIDData("test")
+  
+  ##combining Subject ID Rows 
+  mergedSubject<-rbind(trainSubject,testSubject)
+  
+  
+  #mergining with X data
+  mergedtables<-cbind(mergedtables,mergedSubject)
+  
+  ##Getting Y data and adding column headers
+  trainDT<-GetYDataWithColHeaders("train")
+  testDT<-GetYDataWithColHeaders("test")
+  
+  ##combining Y data data
+  mergedActivities<-rbind(trainDT, testDT)
+  
+  ##Pulling this data back out to change data to be more descriptive
+  ActivityAsStrings<-ActivityString(mergedActivities$Activity.Label)
+  
+  #putting the more descriptive activity data back into the datatable
+  mergedActivities[,Activity.Label:=ActivityAsStrings]
+  
+  #Adding activity data to the merged table (which has X and Y data)
+  mergedtables<-cbind(mergedtables,mergedActivities)
+  
+  ##returning the tidy set
+  mergedtables
+  
+}
+
+
+
+
+
 ##Take "features.txt" which is the column names for the 561 features for each record
 ##Space delimited is an appropriate format
 ##Remove the first column which is row numbers the next column is the row number
@@ -7,8 +56,8 @@ FeatureColNames<-function(){
   
   library(data.table)
   features<-read.table(paste0(getwd(),"/UCI HAR Dataset/features.txt"),
-                      col.names = c("Row Number","Feature Names")
-                       )
+                       col.names = c("Row Number","Feature Names")
+  )
   ##features into data table
   DT<-data.table(features)
   
@@ -27,7 +76,7 @@ GetXDataWithColHeaders<-function(trainOrTest="train"){
   
   xtest<-read.table(paste0(getwd(),paste0("/UCI HAR Dataset/",trainOrTest, "/X_",trainOrTest,".txt")),
                     col.names=featurenames
-                    )
+  )
   returnedDT<-data.table(xtest)
   
   ##returning the data table
@@ -67,7 +116,7 @@ GetSubjectIDData<-function(trainOrTest="train")
 {
   
   subjectIDs<-read.table(paste0(getwd(),paste0("/UCI HAR Dataset/",trainOrTest, "/subject_",trainOrTest,".txt")),
-                    col.names="ID Test Subject"
+                         col.names="ID Test Subject"
   )
   
   DT<-data.table(subjectIDs)
@@ -102,43 +151,43 @@ GetYDataWithColHeaders<-function(trainOrTest="train"){
 ##Replaces Activity.Label with Activity string
 ActivityString<-function(x)
 {
+  
+  labelsvector<-NULL;
+  #x<-as.integer(x)
+  for(ActivityLabel in x){
+    
+    #print(ActivityLabel)
+    
+    if(ActivityLabel==1){
+      label<-"WALKING"
+    }
+    else if(ActivityLabel==2){
+      label<-"WALKING_UPSTAIRS"
+    }
+    else if(ActivityLabel==3){
+      label<-"WALKING_DOWNSTAIRS"
+    }
+    else if(ActivityLabel==4){
+      label<-"SITTING"
+    }
+    else if(ActivityLabel==5){
+      label<-"STANDING"
+    }
+    else if(ActivityLabel==6){
+      label<-"LAYING"
+    }
+    else{
+      label<-NA
+    }
+    
+    labelsvector<-append(labelsvector,label)
+    
+  }
+  
+  labelsvector
+  
+} 
 
-labelsvector<-NULL;
-#x<-as.integer(x)
-for(ActivityLabel in x){
-  
-  #print(ActivityLabel)
-  
-  if(ActivityLabel==1){
-    label<-"WALKING"
-  }
-  else if(ActivityLabel==2){
-    label<-"WALKING_UPSTAIRS"
-  }
-  else if(ActivityLabel==3){
-    label<-"WALKING_DOWNSTAIRS"
-  }
-  else if(ActivityLabel==4){
-    label<-"SITTING"
-  }
-  else if(ActivityLabel==5){
-    label<-"STANDING"
-  }
-  else if(ActivityLabel==6){
-    label<-"LAYING"
-  }
-  else{
-    label<-NA
-  }
-  
-  labelsvector<-append(labelsvector,label)
-  
-}
-
-labelsvector
-  
-  
-}
 
 
 
@@ -149,67 +198,3 @@ labelsvector
 
 ##Get training set
 
-cleandata<-function(){
-  library(data.table)
-trainDT<-GetXDataWithColHeaders("train")
-testDT<-GetXDataWithColHeaders("test")
-mergedtables<-rbind(trainDT, testDT)
-#mergedtables
-trainSubject<-GetSubjectIDData("train")
-testSubject<-GetSubjectIDData("test")
-mergedSubject<-rbind(trainSubject,testSubject)
-mergedtables<-cbind(mergedtables,mergedSubject)
-mergedtables
-
-trainDT<-GetYDataWithColHeaders("train")
-testDT<-GetYDataWithColHeaders("test")
-mergedActivities<-rbind(trainDT, testDT)
-
-
-ActivityAsStrings<-ActivityString(mergedActivities$Activity.Label)
-mergedActivities[,Activity.Label:=ActivityAsStrings]
-
-#testreturn<-GetInertialSignals("train", "body_acc_x")
-
-mergedtables<-cbind(mergedtables,mergedActivities)
-
-mergedNames<-colnames(mergedtables)
-
-measuredmean<-NULL
-for(name in mergedNames)
-{
-  (isMean<-grep("mean",name, fixed=FALSE))
-  (isStd<-grep("std",name, fixed=FALSE))
-  
-  if(     (!(is.na(isMean[1]))) || (!(is.na(isStd[1])))    ){
-    
-    measuredmean<-append(measuredmean,name)
-    
-  }
-  
-
- 
-}
-
-measuredmeanNon<-append(measuredmean, "Activity.Label")
-#measuredmeanNon<-append(measuredmeanNon, "ID.Test.Subject")
-measuredMeansNoActivities<-append(measuredmean, "ID.Test.Subject")
-#measuredmean
-
-
-
-
-
-
-meanstdtables<-mergedtables[,measuredmeanNon, with=FALSE]
-meanstdtablesNoIDs<-mergedtables[,measuredMeansNoActivities, with=FALSE]
-
-mean.summarized<-meanstdtables[,lapply(.SD, mean), by ="Activity.Label"]
-#mean.summarized2<-meanstdtables[,lapply(.SD, mean), by ="ID.Test.Subject"]
-write.table(mean.summarized, "byActivity.txt", row.names=FALSE)
-
-mean.summarized2<-meanstdtablesNoIDs[,lapply(.SD, mean), by ="ID.Test.Subject"]
-write.table(mean.summarized2, "bySubjectID.txt", row.names=FALSE)
-
-
-}
